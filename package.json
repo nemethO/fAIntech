@@ -1,0 +1,12 @@
+{
+  "name": "faintech",
+  "version": "1.0.0",
+  "description": "fAIntech - AI-powered personal finance manager",
+  "scripts": {
+    "css:build": "npx tailwindcss -i ./app/static/css/main.css -o ./app/static/css/output.css",
+    "css:watch": "npx tailwindcss -i ./app/static/css/main.css -o ./app/static/css/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
