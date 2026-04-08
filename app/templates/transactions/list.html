@@ -1,0 +1,179 @@
+{% extends "components/layout.html" %}
+{% block title %}Tranzakciók - fAIntech{% endblock %}
+{% block page_title %}Tranzakciók{% endblock %}
+
+{% block page_content %}
+<!-- szuro sav -->
+<div class="bg-dark-card rounded-xl border border-dark-border p-4 mb-6">
+    <form method="GET" class="flex flex-wrap gap-3 items-end">
+        <!-- kereses -->
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs text-gray-500 mb-1">Keresés</label>
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Partner vagy leírás..."
+                   class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm
+                          focus:outline-none focus:border-primary">
+        </div>
+        <!-- kategoria -->
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Kategória</label>
+            <select name="category" class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <option value="">Mind</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if filters.category == cat.id|string %}selected{% endif %}>
+                    {{ cat.icon }} {{ cat.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- szamla -->
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Számla</label>
+            <select name="account" class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <option value="">Mind</option>
+                {% for acc in accounts %}
+                <option value="{{ acc.id }}" {% if filters.account == acc.id|string %}selected{% endif %}>
+                    {{ acc.bank_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- tipus -->
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Típus</label>
+            <select name="type" class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                <option value="">Mind</option>
+                <option value="income" {% if filters.type == 'income' %}selected{% endif %}>Bevétel</option>
+                <option value="expense" {% if filters.type == 'expense' %}selected{% endif %}>Kiadás</option>
+            </select>
+        </div>
+        <!-- datum -->
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Dátumtól</label>
+            <input type="date" name="from" value="{{ filters['from'] }}"
+                   class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+        </div>
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Dátumig</label>
+            <input type="date" name="to" value="{{ filters['to'] }}"
+                   class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+        </div>
+        <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm rounded-lg transition">
+            Szűrés
+        </button>
+        {% if filters.q or filters.category or filters.account or filters.type or filters['from'] or filters['to'] %}
+        <a href="{{ url_for('transactions.list_transactions') }}" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Törlés</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- tranzakcio tabla -->
+<div class="bg-dark-card rounded-xl border border-dark-border overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-dark-bg text-gray-400 text-xs uppercase">
+                <tr>
+                    <th class="px-4 py-3 text-left">Dátum</th>
+                    <th class="px-4 py-3 text-left">Partner</th>
+                    <th class="px-4 py-3 text-left hidden md:table-cell">Leírás</th>
+                    <th class="px-4 py-3 text-left">Kategória</th>
+                    <th class="px-4 py-3 text-right">Összeg</th>
+                    <th class="px-4 py-3 text-center w-12"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for t in transactions %}
+                <tr class="hover:bg-dark-hover transition" id="tx-{{ t.id }}">
+                    <td class="px-4 py-3 text-gray-300 whitespace-nowrap">{{ t.date.strftime('%Y-%m-%d') }}</td>
+                    <td class="px-4 py-3 font-medium">{{ t.partner or 'Ismeretlen' }}</td>
+                    <td class="px-4 py-3 text-gray-400 hidden md:table-cell truncate max-w-[200px]">{{ t.description or '-' }}</td>
+                    <td class="px-4 py-3">
+                        <select onchange="updateCategory({{ t.id }}, this.value)"
+                                class="bg-dark-bg border border-dark-border rounded px-2 py-1 text-xs focus:outline-none focus:border-primary">
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if t.category_id == cat.id %}selected{% endif %}>
+                                {{ cat.icon }} {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="px-4 py-3 text-right font-semibold whitespace-nowrap
+                               {% if t.is_income %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if t.is_income %}+{% endif %}{{ "{:,.0f}".format(t.amount).replace(",", " ") }} Ft
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="deleteTx({{ t.id }})" class="text-gray-500 hover:text-red-400 transition" title="Törlés">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not transactions %}
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-gray-500">
+                        Nincs találat.
+                        <a href="{{ url_for('imports.upload_page') }}" class="text-primary-light hover:underline">Importálj tranzakciókat!</a>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- lapozas -->
+{% if pagination.pages > 1 %}
+<div class="flex justify-center gap-2 mt-6">
+    {% if pagination.has_prev %}
+    <a href="?page={{ pagination.prev_num }}&q={{ filters.q }}&category={{ filters.category }}&account={{ filters.account }}&type={{ filters.type }}&from={{ filters['from'] }}&to={{ filters['to'] }}"
+       class="px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-sm hover:bg-dark-hover transition">←</a>
+    {% endif %}
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <a href="?page={{ p }}&q={{ filters.q }}&category={{ filters.category }}&account={{ filters.account }}&type={{ filters.type }}&from={{ filters['from'] }}&to={{ filters['to'] }}"
+           class="px-3 py-1.5 rounded-lg text-sm transition
+                  {% if p == pagination.page %}bg-primary text-white{% else %}bg-dark-card border border-dark-border hover:bg-dark-hover{% endif %}">
+            {{ p }}
+        </a>
+        {% else %}
+        <span class="px-2 py-1.5 text-gray-500">...</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="?page={{ pagination.next_num }}&q={{ filters.q }}&category={{ filters.category }}&account={{ filters.account }}&type={{ filters.type }}&from={{ filters['from'] }}&to={{ filters['to'] }}"
+       class="px-3 py-1.5 bg-dark-card border border-dark-border rounded-lg text-sm hover:bg-dark-hover transition">→</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+// kategoria frissites (human-in-the-loop)
+async function updateCategory(txId, catId) {
+    try {
+        const resp = await fetch(`/transactions/${txId}/category`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category_id: catId })
+        });
+        if (!resp.ok) throw new Error();
+    } catch (e) {
+        alert('Hiba a kategória mentésekor');
+    }
+}
+
+// tranzakcio torles
+async function deleteTx(txId) {
+    if (!confirm('Biztosan törölni akarod?')) return;
+    try {
+        const resp = await fetch(`/transactions/${txId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            document.getElementById(`tx-${txId}`).remove();
+        }
+    } catch (e) {
+        alert('Hiba a törléskor');
+    }
+}
+</script>
+{% endblock %}

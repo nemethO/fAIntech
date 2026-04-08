@@ -1,7 +1,249 @@
-{% extends "base.html" %}
+{% extends "components/layout.html" %}
 {% block title %}Dashboard - fAIntech{% endblock %}
-{% block content %}
-<div class="flex items-center justify-center min-h-screen">
-    <h1 class="text-3xl font-bold text-primary-light">fAIntech</h1>
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_content %}
+<!-- osszesito kartyak -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+    <!-- egyenleg -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-400">Egyenleg</span>
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+        </div>
+        <p class="text-2xl font-bold">{{ "{:,.0f}".format(balance).replace(",", " ") }} Ft</p>
+        <p class="text-xs mt-1 {% if balance_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+            {% if balance_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(balance_change|abs) }}% vs. előző hónap
+        </p>
+    </div>
+    <!-- bevetel -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-400">{{ month_name }} – Bevétel</span>
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8v2m0 8v2"/>
+            </svg>
+        </div>
+        <p class="text-2xl font-bold text-green-400">{{ "{:,.0f}".format(income).replace(",", " ") }} Ft</p>
+        <p class="text-xs mt-1 {% if income_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+            {% if income_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(income_change|abs) }}% vs. előző hónap
+        </p>
+    </div>
+    <!-- kiadas -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-400">{{ month_name }} – Kiadás</span>
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <p class="text-2xl font-bold text-red-400">{{ "{:,.0f}".format(expense).replace(",", " ") }} Ft</p>
+        <p class="text-xs mt-1 {% if expense_change <= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+            {% if expense_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(expense_change|abs) }}% vs. előző hónap
+        </p>
+    </div>
+    <!-- megtakaritasi rata -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-400">Megtakarítási ráta</span>
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+        </div>
+        <p class="text-2xl font-bold">{{ savings_rate }}%</p>
+        <p class="text-xs mt-1 {% if savings_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+            {% if savings_change >= 0 %}↑{% else %}↓{% endif %} {{ "%.1f"|format(savings_change|abs) }} pp vs. előző hónap
+        </p>
+    </div>
 </div>
+
+<!-- koltsegkeret alertek -->
+{% if alerts %}
+<div class="space-y-2 mb-6">
+    {% for a in alerts %}
+    <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm
+                {% if a.over %}bg-red-900/20 border border-red-800/50 text-red-300
+                {% else %}bg-yellow-900/20 border border-yellow-700/50 text-yellow-300{% endif %}">
+        {% if a.over %}
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+        </svg>
+        {% else %}
+        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+        </svg>
+        {% endif %}
+        <span>
+            {{ a.category }}:
+            {% if a.over %}Túllépted a havi kereted{% else %}Megközelíted a havi kereted{% endif %}
+            ({{ "{:,.0f}".format(a.spent).replace(",", " ") }} Ft / {{ "{:,.0f}".format(a.limit).replace(",", " ") }} Ft – {{ a.pct }}%)
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- chartok sor -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <!-- bevetel vs kiadas chart -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="font-semibold">Bevétel vs. Kiadás</h3>
+                <p class="text-xs text-gray-500">Utolsó 6 hónap</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span> Bevétel</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span> Kiadás</span>
+            </div>
+        </div>
+        <div class="relative h-[200px]">
+            <canvas id="incomeExpenseChart"></canvas>
+        </div>
+    </div>
+
+    <!-- kategoria fankdiagram -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="font-semibold">Kategóriák</h3>
+                <p class="text-xs text-gray-500" id="catSubtitle">{{ month_name }} – Kiadások</p>
+            </div>
+            <div class="flex bg-dark-bg rounded-lg p-0.5 text-xs">
+                <button onclick="switchCatView('monthly')" id="btnMonthly"
+                        class="px-3 py-1 rounded-md transition bg-primary/20 text-primary">Havi</button>
+                <button onclick="switchCatView('all')" id="btnAll"
+                        class="px-3 py-1 rounded-md transition text-gray-400 hover:text-gray-200">Összes</button>
+            </div>
+        </div>
+
+        <!-- havi nezet - nincs adat -->
+        {% if not has_monthly_data %}
+        <div id="catEmptyMsg" class="text-center py-6">
+            <p class="text-sm text-gray-500">Ebben a hónapban nincs elég adat.</p>
+            <button onclick="switchCatView('all')" class="text-xs text-primary-light hover:underline mt-1">Összes kiadás megtekintése →</button>
+        </div>
+        {% endif %}
+
+        <div id="catChartWrap" class="{% if not has_monthly_data %}hidden{% endif %}">
+            <div class="flex items-center gap-6">
+                <div class="relative w-48 h-48 flex-shrink-0">
+                    <canvas id="categoryDonut"></canvas>
+                </div>
+                <div id="catLegend" class="space-y-2 text-sm">
+                    {% for name, data in top_categories_monthly %}
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background: {{ data.color }}"></span>
+                        <span class="text-gray-300">{{ name }}</span>
+                        <span class="ml-auto text-gray-400">{{ "{:,.0f}".format(data.amount).replace(",", " ") }} Ft</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- legutobbi tranzakciok -->
+<div class="bg-dark-card rounded-xl border border-dark-border p-5">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h3 class="font-semibold">Legutóbbi tranzakciók</h3>
+            <p class="text-xs text-gray-500">Legfrissebb {{ recent|length }} tétel</p>
+        </div>
+        <a href="{{ url_for('transactions.list_transactions') }}" class="text-xs text-primary-light hover:underline">Összes →</a>
+    </div>
+    <div class="space-y-3">
+        {% for t in recent %}
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-dark-bg flex items-center justify-center text-lg">
+                {{ t.category_icon }}
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium truncate">{{ t.partner }}{% if t.description %} – {{ t.description }}{% endif %}</p>
+                <p class="text-xs text-gray-500">{{ t.date }} · {{ t.account_name }}</p>
+            </div>
+            <p class="text-sm font-semibold {% if t.is_income %}text-green-400{% else %}text-red-400{% endif %}">
+                {% if t.is_income %}+{% else %}↓{% endif %} {{ "{:,.0f}".format(t.amount|abs).replace(",", " ") }} Ft
+            </p>
+        </div>
+        {% endfor %}
+        {% if not recent %}
+        <p class="text-sm text-gray-500 text-center py-8">Még nincsenek tranzakciók. <a href="{{ url_for('imports.upload_page') }}" class="text-primary-light hover:underline">Importálj egyet!</a></p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- chart adatok -->
+<script>
+const catMonthly = {{ top_categories_monthly | tojson }};
+const catAll = {{ top_categories_all | tojson }};
+const monthName = "{{ month_name }}";
+let catChart = null;
+
+function switchCatView(mode) {
+    const data = mode === 'monthly' ? catMonthly : catAll;
+    const btnM = document.getElementById('btnMonthly');
+    const btnA = document.getElementById('btnAll');
+    const sub = document.getElementById('catSubtitle');
+    const wrap = document.getElementById('catChartWrap');
+    const empty = document.getElementById('catEmptyMsg');
+
+    // toggle gombok
+    btnM.className = 'px-3 py-1 rounded-md transition ' +
+        (mode === 'monthly' ? 'bg-primary/20 text-primary' : 'text-gray-400 hover:text-gray-200');
+    btnA.className = 'px-3 py-1 rounded-md transition ' +
+        (mode === 'all' ? 'bg-primary/20 text-primary' : 'text-gray-400 hover:text-gray-200');
+
+    sub.textContent = mode === 'monthly' ? monthName + ' – Kiadások' : 'Összes kiadás';
+
+    if (data.length === 0) {
+        if (wrap) wrap.classList.add('hidden');
+        if (empty) empty.classList.remove('hidden');
+        return;
+    }
+    if (empty) empty.classList.add('hidden');
+    if (wrap) wrap.classList.remove('hidden');
+
+    // legend ujraepites
+    const legend = document.getElementById('catLegend');
+    legend.innerHTML = data.map(d =>
+        `<div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full flex-shrink-0" style="background: ${d[1].color}"></span>
+            <span class="text-gray-300">${d[0]}</span>
+            <span class="ml-auto text-gray-400">${Math.round(d[1].amount).toLocaleString('hu-HU')} Ft</span>
+        </div>`
+    ).join('');
+
+    // chart ujrarajzolas
+    if (catChart) catChart.destroy();
+    const ctx = document.getElementById('categoryDonut');
+    catChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d[0]),
+            datasets: [{
+                data: data.map(d => d[1].amount),
+                backgroundColor: data.map(d => d[1].color),
+                borderWidth: 0, spacing: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.label + ': ' + ctx.parsed.toLocaleString('hu-HU') + ' Ft'
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

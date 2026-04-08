@@ -1,0 +1,158 @@
+{% extends "components/layout.html" %}
+{% block title %}Analitika - fAIntech{% endblock %}
+{% block page_title %}Analitika{% endblock %}
+
+{% block page_content %}
+<!-- tabfulek -->
+<div class="flex gap-2 mb-6">
+    <button onclick="switchTab('overview')" id="tab-overview"
+            class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white transition">Áttekintés</button>
+    <button onclick="switchTab('categories')" id="tab-categories"
+            class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-dark-card text-gray-400 hover:text-white transition">Kategóriák</button>
+    <button onclick="switchTab('trends')" id="tab-trends"
+            class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-dark-card text-gray-400 hover:text-white transition">Trendek</button>
+    <button onclick="switchTab('merchants')" id="tab-merchants"
+            class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-dark-card text-gray-400 hover:text-white transition">Kereskedők</button>
+</div>
+
+<!-- ==================== ATTEKINTES TAB ==================== -->
+<div id="panel-overview" class="tab-panel">
+    <!-- osszesito kartyak -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <p class="text-xs text-gray-500" id="ov-prev-label">Előző havi megtak.</p>
+            <p class="text-xl font-bold text-green-400" id="ov-prev-savings">0 Ft</p>
+            <p class="text-xs text-gray-500" id="ov-prev-rate"></p>
+        </div>
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <p class="text-xs text-gray-500" id="ov-curr-label">Aktuális havi megtak.</p>
+            <p class="text-xl font-bold text-green-400" id="ov-curr-savings">0 Ft</p>
+            <p class="text-xs text-gray-500" id="ov-curr-rate"></p>
+        </div>
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <p class="text-xs text-gray-500">Átl. napi kiadás</p>
+            <p class="text-xl font-bold text-yellow-400" id="ov-avg-daily">0 Ft</p>
+            <p class="text-xs text-gray-500">/nap</p>
+        </div>
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <p class="text-xs text-gray-500">Legtöbb kiadás</p>
+            <p class="text-xl font-bold text-primary-light" id="ov-top-cat">-</p>
+            <p class="text-xs text-gray-500" id="ov-top-amount"></p>
+        </div>
+    </div>
+
+    <!-- havi osszehasonlitas chart -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5 mb-6">
+        <h3 class="font-semibold mb-1" id="ov-comp-title">Havi összehasonlítás</h3>
+        <p class="text-xs text-gray-500 mb-4">Kategóriánkénti összevetés</p>
+        <div style="height: 300px">
+            <canvas id="overviewBarChart"></canvas>
+        </div>
+    </div>
+
+    <!-- penzugyi trend -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <h3 class="font-semibold mb-1">Pénzügyi trend</h3>
+        <p class="text-xs text-gray-500 mb-4">Bevétel és kiadás alakulása (6 hónap)</p>
+        <div style="height: 250px">
+            <canvas id="overviewTrendChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== KATEGORIAK TAB ==================== -->
+<div id="panel-categories" class="tab-panel hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <!-- radar chart -->
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-1">Kategória-mérleg</h3>
+            <p class="text-xs text-gray-500 mb-4" id="cat-radar-sub">Relatív kiadás arányok</p>
+            <div style="height: 300px">
+                <canvas id="catRadarChart"></canvas>
+            </div>
+        </div>
+        <!-- reszletes bontas -->
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-4" id="cat-detail-title">Részletes bontás</h3>
+            <div id="catDetailList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- valtozas kartya -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <h3 class="font-semibold mb-4" id="cat-change-title">Változás</h3>
+        <div id="catChangeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </div>
+</div>
+
+<!-- ==================== TRENDEK TAB ==================== -->
+<div id="panel-trends" class="tab-panel hidden">
+    <!-- koltes tempo + megtakaritasi rata sor -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <!-- koltes tempo -->
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-1">Költés tempó</h3>
+            <p class="text-xs text-gray-500 mb-4">Vetített havi kiadás az eddigi tempó alapján</p>
+            <div class="flex items-end gap-6">
+                <div>
+                    <p class="text-xs text-gray-500">Eddigi kiadás</p>
+                    <p class="text-2xl font-bold" id="tr-pace-current">0 Ft</p>
+                    <p class="text-xs text-gray-500 mt-1"><span id="tr-pace-day">0</span>. napja a hónapnak</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500">Vetítés (30 nap)</p>
+                    <p class="text-2xl font-bold" id="tr-pace-projected">0 Ft</p>
+                    <p class="text-xs mt-1" id="tr-pace-vs">-</p>
+                </div>
+            </div>
+            <div class="mt-4 w-full bg-dark-bg rounded-full h-3 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" id="tr-pace-bar" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- megtakaritasi rata trend -->
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-1">Megtakarítási ráta</h3>
+            <p class="text-xs text-gray-500 mb-4">Havonta megtakarított % a bevételből</p>
+            <div class="relative" style="height: 160px">
+                <canvas id="trSavingsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- napi atlag + tranzakcioszam -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-1">Napi átlagos kiadás</h3>
+            <p class="text-xs text-gray-500 mb-4">Havonkénti összehasonlítás</p>
+            <div class="relative" style="height: 180px">
+                <canvas id="trAvgDailyChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+            <h3 class="font-semibold mb-1">Tranzakciók száma</h3>
+            <p class="text-xs text-gray-500 mb-4">Havi aktivitás</p>
+            <div class="relative" style="height: 180px">
+                <canvas id="trTxCountChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- kategoria eltolodasok -->
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <h3 class="font-semibold mb-1">Legnagyobb eltolódások</h3>
+        <p class="text-xs text-gray-500 mb-4">Kategóriák, ahol a legnagyobb a változás az előző hónaphoz képest</p>
+        <div id="trCatShifts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </div>
+</div>
+
+<!-- ==================== KERESKEDOK TAB ==================== -->
+<div id="panel-merchants" class="tab-panel hidden">
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5">
+        <h3 class="font-semibold mb-4">Top kereskedők (aktuális hónap)</h3>
+        <div id="merchantsList" class="space-y-2"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

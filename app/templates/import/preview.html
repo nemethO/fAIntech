@@ -1,7 +1,9 @@
-{% extends "base.html" %}
+{% extends "components/layout.html" %}
 {% block title %}Előnézet - fAIntech{% endblock %}
-{% block content %}
-<div class="max-w-6xl mx-auto px-4 py-8">
+{% block page_title %}Importálás előnézete{% endblock %}
+
+{% block page_content %}
+<div class="max-w-6xl mx-auto">
 
     <!-- fejlec infok -->
     <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
@@ -247,4 +249,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-{% endblock %}
+{% endblock page_content %}

@@ -1,0 +1,75 @@
+{% extends "components/layout.html" %}
+{% block title %}Költségkeret - fAIntech{% endblock %}
+{% block page_title %}Költségkeret{% endblock %}
+
+{% block page_content %}
+<p class="text-gray-400 text-sm mb-6">{{ month_name }} havi kereteid. Kattints az összegre a szerkesztéshez.</p>
+
+<div class="space-y-3">
+    {% for item in budget_items %}
+    <div class="bg-dark-card rounded-xl border border-dark-border p-5" id="budget-{{ item.category.id }}">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">{{ item.category.icon }}</span>
+                <span class="font-medium">{{ item.category.name }}</span>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <!-- elkoltes -->
+                <span class="{% if item.over %}text-red-400{% elif item.warning %}text-yellow-400{% else %}text-gray-300{% endif %}">
+                    {{ "{:,.0f}".format(item.spent).replace(",", " ") }} Ft
+                </span>
+                <span class="text-gray-600">/</span>
+                <!-- keret szerkesztes -->
+                <div class="flex items-center gap-1">
+                    <input type="number" value="{{ item.limit|int }}" min="0" step="1000"
+                           data-cat="{{ item.category.id }}"
+                           class="budget-input w-28 bg-dark-bg border border-dark-border rounded px-2 py-1 text-sm text-right
+                                  focus:outline-none focus:border-primary"
+                           onchange="saveBudget({{ item.category.id }}, this.value)">
+                    <span class="text-gray-500 text-sm">Ft</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- progress bar -->
+        {% if item.limit > 0 %}
+        <div class="w-full bg-dark-bg rounded-full h-2 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-300
+                        {% if item.over %}bg-red-500{% elif item.warning %}bg-yellow-500{% else %}bg-primary{% endif %}"
+                 style="width: {{ item.pct }}%"></div>
+        </div>
+        <div class="flex justify-between mt-1 text-xs text-gray-500">
+            <span>{{ item.pct_raw }}%</span>
+            <span>{{ "{:,.0f}".format(item.limit - item.spent).replace(",", " ") }} Ft maradt</span>
+        </div>
+        {% else %}
+        <p class="text-xs text-gray-600">Nincs beállítva keret – adj meg egy összeget a jobb oldalon.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% if not budget_items %}
+<div class="text-center py-12 text-gray-500">
+    <p>Nincs kategória. <a href="{{ url_for('imports.upload_page') }}" class="text-primary-light hover:underline">Importálj tranzakciókat</a> először!</p>
+</div>
+{% endif %}
+
+<script>
+async function saveBudget(catId, value) {
+    try {
+        const resp = await fetch('/budget/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category_id: catId, monthly_limit: parseFloat(value) || 0 })
+        });
+        if (resp.ok) {
+            // oldal ujratoltese a progress bar frissitesehez
+            location.reload();
+        }
+    } catch (e) {
+        alert('Hiba a mentéskor');
+    }
+}
+</script>
+{% endblock %}

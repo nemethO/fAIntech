@@ -1,7 +1,9 @@
-{% extends "base.html" %}
+{% extends "components/layout.html" %}
 {% block title %}Importálás - fAIntech{% endblock %}
-{% block content %}
-<div class="max-w-3xl mx-auto px-4 py-12">
+{% block page_title %}Importálás{% endblock %}
+
+{% block page_content %}
+<div class="max-w-3xl mx-auto">
     <h1 class="text-2xl font-bold mb-2">Számlakivonat importálása</h1>
     <p class="text-gray-400 mb-8">Töltsd fel a banki számlakivonatodat és az AI automatikusan feldolgozza.</p>
 
@@ -77,4 +79,4 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/import_wizard.js') }}"></script>
-{% endblock %}
+{% endblock page_content %}

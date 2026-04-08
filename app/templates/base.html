@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}fAIntech{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -12,23 +13,35 @@
                 extend: {
                     colors: {
                         dark: {
-                            bg: '#0f1117',
-                            card: '#1a1d2e',
-                            border: '#2a2d3e',
-                            hover: '#252840',
+                            bg: '#0b0f1a',
+                            card: '#111827',
+                            border: '#1e2a3a',
+                            hover: '#1a2744',
                         },
                         primary: {
-                            DEFAULT: '#7c3aed',
-                            light: '#a78bfa',
-                            dark: '#5b21b6',
+                            DEFAULT: '#2563eb',
+                            light: '#60a5fa',
+                            dark: '#1d4ed8',
                         },
                     },
                 },
             },
         }
     </script>
+    <style>
+        /* scrollbar stilusok */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f1a; }
+        ::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2a3a52; }
+        /* sidebar transition */
+        .sidebar-link { transition: all 0.15s ease; }
+        .sidebar-link:hover { background: #1a2744; }
+        .sidebar-link.active { background: #2563eb; }
+    </style>
 </head>
 <body class="bg-dark-bg text-gray-100 min-h-screen">
     {% block content %}{% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html>

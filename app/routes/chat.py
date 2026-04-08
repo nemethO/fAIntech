@@ -1,8 +1,10 @@
-from flask import Blueprint
+from flask import Blueprint, render_template
+from flask_login import login_required
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
-# Routes to implement:
-# GET  /chat        - Chat page with AI assistant
-# POST /chat/send   - Send message, get AI response (RAG pipeline)
-# GET  /chat/history - Load chat history
+# kesobb lesz a full AI chat implementacio
+@chat_bp.route('/')
+@login_required
+def chat_page():
+    return render_template('chat/index.html')
