@@ -14,7 +14,10 @@ class Config:
     # AI
     AI_PROVIDER = os.environ.get('AI_PROVIDER', 'gemini')
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+    GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-2.0-flash')
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
+    OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'google/gemini-2.0-flash-exp:free')
 
 
 class DevelopmentConfig(Config):

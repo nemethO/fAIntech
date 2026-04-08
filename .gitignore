@@ -33,3 +33,4 @@ data/uploads/
 
 # Logs
 *.log
+/account_statement_data

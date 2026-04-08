@@ -4,15 +4,17 @@ from app.extensions import db
 from app.models.category import Category
 
 DEFAULT_CATEGORIES = [
-    {'name': 'Elelmiszer',     'icon': '🛒', 'color': '#22c55e'},
-    {'name': 'Etterem',        'icon': '🍽️', 'color': '#f97316'},
-    {'name': 'Kozlekedes',     'icon': '🚗', 'color': '#3b82f6'},
-    {'name': 'Szorakozas',     'icon': '🎬', 'color': '#a78bfa'},
-    {'name': 'Vasarlas',       'icon': '🛍️', 'color': '#ec4899'},
-    {'name': 'Kozuzemi dijak', 'icon': '⚡', 'color': '#06b6d4'},
-    {'name': 'Lakhatas',       'icon': '🏠', 'color': '#eab308'},
-    {'name': 'Egeszseg',       'icon': '🏥', 'color': '#ef4444'},
-    {'name': 'Egyeb',          'icon': '🔮', 'color': '#6b7280'},
+    {'name': 'Élelmiszer',     'icon': '🛒', 'color': '#22c55e'},
+    {'name': 'Étterem',        'icon': '🍽️', 'color': '#f97316'},
+    {'name': 'Közlekedés',     'icon': '🚗', 'color': '#3b82f6'},
+    {'name': 'Szórakozás',     'icon': '🎬', 'color': '#a78bfa'},
+    {'name': 'Vásárlás',       'icon': '🛍️', 'color': '#ec4899'},
+    {'name': 'Közüzemi díjak', 'icon': '⚡', 'color': '#06b6d4'},
+    {'name': 'Lakhatás',       'icon': '🏠', 'color': '#eab308'},
+    {'name': 'Egészség',       'icon': '🏥', 'color': '#ef4444'},
+    {'name': 'Pénzügyi',       'icon': '💱', 'color': '#8b5cf6'},
+    {'name': 'Fizetés',        'icon': '💰', 'color': '#10b981'},
+    {'name': 'Egyéb',          'icon': '🔮', 'color': '#6b7280'},
 ]
 
 
