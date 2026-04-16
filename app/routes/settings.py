@@ -63,7 +63,10 @@ def add_category():
     if not name:
         return jsonify({'error': 'Adj meg egy nevet'}), 400
 
-    existing = Category.query.filter_by(name=name, user_id=current_user.id).first()
+    existing = Category.query.filter(
+        Category.name == name,
+        (Category.user_id == current_user.id) | (Category.user_id.is_(None))
+    ).first()
     if existing:
         return jsonify({'error': 'Már létezik ilyen kategória'}), 400
 

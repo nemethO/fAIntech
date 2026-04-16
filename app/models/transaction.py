@@ -16,13 +16,18 @@ class Transaction(db.Model):
     currency = db.Column(db.String(3), default='HUF')
     partner = db.Column(db.String(200))         # Payee / merchant name
     description = db.Column(db.Text)            # Kozlemeny / memo
-    transaction_hash = db.Column(db.String(64), unique=True)  # SHA-256 for dedup
+    transaction_hash = db.Column(db.String(64))  # SHA-256 for dedup
 
     is_income = db.Column(db.Boolean, default=False)
     ai_category_confidence = db.Column(db.Float, nullable=True)
     manually_categorized = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'transaction_hash',
+                            name='uq_transaction_user_hash'),
+    )
 
     def __repr__(self):
         return f'<Transaction {self.date} {self.partner} {self.amount}>'

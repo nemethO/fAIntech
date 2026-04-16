@@ -1,12 +1,12 @@
 from datetime import date
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import func
 
 from app.extensions import db
 from app.models.budget import Budget
-from app.models.category import Category
-from app.models.transaction import Transaction
+from app.services.analytics_service import (
+    get_user_categories, get_category_spending, MONTH_NAMES,
+)
 
 budget_bp = Blueprint('budget', __name__, url_prefix='/budget')
 
@@ -18,31 +18,16 @@ def budget_page():
     today = date.today()
     current_month = today.strftime('%Y-%m')
 
-    # kategoriak amikre lehet keretet allitani
-    categories = Category.query.filter(
-        (Category.user_id == current_user.id) | (Category.user_id.is_(None))
-    ).filter(Category.name != 'Fizetés').all()
+    categories = get_user_categories(current_user.id, exclude_income=True)
 
-    # jelenlegi keretek
     budgets = Budget.query.filter_by(
         user_id=current_user.id,
-        year_month=current_month
+        year_month=current_month,
     ).all()
     budget_map = {b.category_id: b for b in budgets}
 
-    # aktualis havi kiadasok kategorianként
-    txs = Transaction.query.filter(
-        Transaction.user_id == current_user.id,
-        Transaction.is_income == False,
-        func.strftime('%Y-%m', Transaction.date) == current_month
-    ).all()
+    spent_map = get_category_spending(current_user.id, current_month)
 
-    spent_map = {}
-    for t in txs:
-        if t.category_id:
-            spent_map[t.category_id] = spent_map.get(t.category_id, 0) + abs(t.amount)
-
-    # osszerakjuk a templetehez
     budget_items = []
     for cat in categories:
         b = budget_map.get(cat.id)
@@ -60,16 +45,11 @@ def budget_page():
             'warning': 80 <= pct < 100,
         })
 
-    # rendezés: van keret > nincs keret
     budget_items.sort(key=lambda x: (x['limit'] == 0, -x['pct_raw']))
-
-    month_names = {1:'Január', 2:'Február', 3:'Március', 4:'Április',
-                   5:'Május', 6:'Június', 7:'Július', 8:'Augusztus',
-                   9:'Szeptember', 10:'Október', 11:'November', 12:'December'}
 
     return render_template('budget/index.html',
         budget_items=budget_items,
-        month_name=month_names.get(today.month, ''),
+        month_name=MONTH_NAMES.get(today.month, ''),
         year_month=current_month,
     )
 

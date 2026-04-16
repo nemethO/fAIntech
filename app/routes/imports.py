@@ -12,8 +12,10 @@ from app.extensions import db
 from app.models.account import Account
 from app.models.transaction import Transaction
 from app.models.import_log import ImportLog
-from app.models.category import Category
 from app.services.statement_parser import extract_text, parse_with_llm, categorize_transactions
+from app.services.categorizer import build_category_map, resolve_category_id
+from app.services.dedup import is_duplicate
+from app.services.analytics_service import get_user_categories
 
 imports_bp = Blueprint('imports', __name__, url_prefix='/import')
 
@@ -87,9 +89,7 @@ def preview():
         return redirect(url_for('imports.upload_page'))
 
     # kategoria lista a legordulo menuhoz
-    categories = Category.query.filter(
-        (Category.user_id == current_user.id) | (Category.user_id.is_(None))
-    ).all()
+    categories = get_user_categories(current_user.id)
 
     # felhasznalo szamlai
     accounts = Account.query.filter_by(user_id=current_user.id).all()
@@ -145,11 +145,8 @@ def confirm():
     db.session.add(import_log)
     db.session.flush()
 
-    # kategoria nev -> id lekerdezes
-    all_categories = Category.query.filter(
-        (Category.user_id == current_user.id) | (Category.user_id.is_(None))
-    ).all()
-    cat_name_map = {c.name: c.id for c in all_categories}
+    # kategoria map + dedup
+    cat_map = build_category_map(current_user.id)
 
     imported = 0
     duplicates = 0
@@ -160,20 +157,13 @@ def confirm():
 
         # duplikacio ellenorzes hash alapjan
         tx_hash = tx.get('transaction_hash', '')
-        if tx_hash and Transaction.query.filter_by(transaction_hash=tx_hash).first():
+        if is_duplicate(tx_hash, user_id=current_user.id):
             duplicates += 1
             continue
 
         # kategoria id megkeresese
         cat_name = tx.get('category', 'Egyéb')
-        category_id = cat_name_map.get(cat_name)
-
-        # ha nincs ilyen kategoria, megprobalunk hasonlot keresni (ekezet nelkul)
-        if not category_id:
-            for name, cid in cat_name_map.items():
-                if _normalize(name) == _normalize(cat_name):
-                    category_id = cid
-                    break
+        category_id = resolve_category_id(cat_name, cat_map)
 
         try:
             transaction = Transaction(
@@ -210,10 +200,3 @@ def confirm():
         'duplicates': duplicates,
         'total': len(edited_transactions),
     })
-
-
-def _normalize(text):
-    """Ekezetek eltavolitasa osszehasonlitashoz."""
-    import unicodedata
-    nfkd = unicodedata.normalize('NFKD', text)
-    return ''.join(c for c in nfkd if not unicodedata.combining(c)).lower()
