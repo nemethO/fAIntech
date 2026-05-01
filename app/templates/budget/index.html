@@ -15,7 +15,7 @@
             </div>
             <div class="flex items-center gap-4 text-sm">
                 <!-- elkoltes -->
-                <span class="{% if item.over %}text-red-400{% elif item.warning %}text-yellow-400{% else %}text-gray-300{% endif %}">
+                <span class="{% if item.over or item.unbudgeted_spend %}text-red-400{% elif item.warning %}text-yellow-400{% else %}text-gray-300{% endif %}">
                     {{ "{:,.0f}".format(item.spent).replace(",", " ") }} Ft
                 </span>
                 <span class="text-gray-600">/</span>
@@ -32,7 +32,7 @@
         </div>
 
         <!-- progress bar -->
-        {% if item.limit > 0 %}
+        {% if item.has_budget %}
         <div class="w-full bg-dark-bg rounded-full h-2 overflow-hidden">
             <div class="h-full rounded-full transition-all duration-300
                         {% if item.over %}bg-red-500{% elif item.warning %}bg-yellow-500{% else %}bg-primary{% endif %}"
@@ -40,8 +40,14 @@
         </div>
         <div class="flex justify-between mt-1 text-xs text-gray-500">
             <span>{{ item.pct_raw }}%</span>
-            <span>{{ "{:,.0f}".format(item.limit - item.spent).replace(",", " ") }} Ft maradt</span>
+            {% if item.over %}
+            <span class="text-red-400">{{ "{:,.0f}".format(item.over_amount).replace(",", " ") }} Ft-tal túllépve</span>
+            {% else %}
+            <span>{{ "{:,.0f}".format(item.remaining).replace(",", " ") }} Ft maradt</span>
+            {% endif %}
         </div>
+        {% elif item.unbudgeted_spend %}
+        <p class="text-xs text-red-400">{{ "{:,.0f}".format(item.spent).replace(",", " ") }} Ft költés van ebben a kategóriában, de nincs hozzá keret beállítva.</p>
         {% else %}
         <p class="text-xs text-gray-600">Nincs beállítva keret – adj meg egy összeget a jobb oldalon.</p>
         {% endif %}

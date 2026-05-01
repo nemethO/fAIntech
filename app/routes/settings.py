@@ -6,6 +6,7 @@ from app.extensions import db
 from app.models.user import User
 from app.models.category import Category
 from app.models.account import Account
+from app.services.categorizer import ensure_default_categories
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
@@ -14,6 +15,7 @@ settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 @login_required
 def settings_page():
     """Beallitasok oldal."""
+    ensure_default_categories()
     categories = Category.query.filter(
         (Category.user_id == current_user.id) | (Category.user_id.is_(None))
     ).all()

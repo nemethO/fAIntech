@@ -7,6 +7,7 @@ from app.models.transaction import Transaction
 from app.models.category import Category
 from app.models.budget import Budget
 from app.models.account import Account
+from app.services.categorizer import ensure_default_categories
 
 # magyar honapnevek
 MONTH_NAMES = {
@@ -58,6 +59,7 @@ def pct_change(curr, prev):
 
 def get_user_categories(user_id, exclude_income=False):
     """Felhasznalo kategoriai (sajat + globalis)."""
+    ensure_default_categories()
     q = Category.query.filter(
         (Category.user_id == user_id) | (Category.user_id.is_(None))
     )

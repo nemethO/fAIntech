@@ -33,19 +33,32 @@ def budget_page():
         b = budget_map.get(cat.id)
         spent = spent_map.get(cat.id, 0)
         limit_val = b.monthly_limit if b else 0
-        pct = (spent / limit_val * 100) if limit_val > 0 else 0
+        has_budget = limit_val > 0
+        pct = (spent / limit_val * 100) if has_budget else 0
+        remaining = limit_val - spent if has_budget else 0
+        unbudgeted_spend = spent > 0 and not has_budget
         budget_items.append({
             'category': cat,
             'budget': b,
             'spent': spent,
             'limit': limit_val,
+            'has_budget': has_budget,
             'pct': min(round(pct), 100),
             'pct_raw': round(pct),
-            'over': pct >= 100,
-            'warning': 80 <= pct < 100,
+            'remaining': remaining,
+            'over_amount': max(spent - limit_val, 0) if has_budget else spent,
+            'unbudgeted_spend': unbudgeted_spend,
+            'over': has_budget and pct >= 100,
+            'warning': has_budget and 80 <= pct < 100,
         })
 
-    budget_items.sort(key=lambda x: (x['limit'] == 0, -x['pct_raw']))
+    budget_items.sort(
+        key=lambda x: (
+            x['limit'] == 0 and x['spent'] == 0,
+            x['limit'] == 0,
+            -(x['pct_raw'] if x['limit'] > 0 else x['spent']),
+        )
+    )
 
     return render_template('budget/index.html',
         budget_items=budget_items,
